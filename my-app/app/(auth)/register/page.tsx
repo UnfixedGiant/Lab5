@@ -1,10 +1,11 @@
 "use client"
 
+
+
 import CustomRegisterForm from "./CustomRegisterForm"
 
-
-
 function page() {
+
     return (
         <div>
             <CustomRegisterForm />

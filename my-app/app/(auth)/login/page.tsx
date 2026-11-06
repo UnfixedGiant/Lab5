@@ -1,17 +1,24 @@
 "use client"
 
-import CustomLoginForm from "./CustomLoginForm"
+import AuthLoginForm from "./AuthLoginForm"
 import SigninButton from "./SigninButton"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 import { handleGoogleLogin } from "@/app/actions/GoogleAction"
-
-
+import { useSearchParams } from "next/navigation"
 
 const LoginPage = () => {
 
+    const searchParams = useSearchParams()
+    const isJustRegistered = searchParams.get("registered") === "true"
+
     const [elogin, setElogin] = useState(false)
 
+    useEffect(() => {
+        if (isJustRegistered) {
+            setElogin(true)
+        }
+    }, [])
 
     const ShowEmailLogin = () => {
         setElogin(!elogin)
@@ -34,7 +41,12 @@ const LoginPage = () => {
                     callback={ShowEmailLogin}
                 />
             </div>
-            {elogin ? <CustomLoginForm /> : ""}
+            {elogin ? <AuthLoginForm /> : ""}
+            {isJustRegistered && (
+                <div className="p-10" bg-emerald-100 text-emerald-700 mb-15 rounded-md>
+                    Account Created Successfully! Please sign in with your credentials
+                </div>
+            )}
         </>
 
     )

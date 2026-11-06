@@ -7,14 +7,15 @@ import Link from "next/link"
 
 import { usePathname } from "next/navigation";
 import { useAuth } from "../hooks/useAuth"
+import { useSession, signOut } from "next-auth/react"
 
 
 const Navbar = () => {
-    const pathname = usePathname();
-    const { user, isAuthenticated, isLoading, logout } = useAuth()
+    const pathname = usePathname()
+    // const { user, isAuthenticated, isLoading, logout } = useAuth()
+    const { data: session } = useSession()
 
     return (
-
 
 
         <nav className="navbar bg-base-100 shadow-sm">
@@ -71,12 +72,29 @@ const Navbar = () => {
                 </div>
             </div>
             <div className="navbar-end">
-                {isLoading ? null : isAuthenticated ? (
-                    <div className="flex items-center gap-3">
-                        <span>{user.name ?? user.email}</span>
-                        <button className="btn btn-outline btn-sm" onClick={logout}>
-                            Logout
-                        </button>
+                {session?.user ? (
+                    <div className="dropdown dropdown-end">
+                        <div
+                            tabIndex={0}
+                            role="button"
+                            className="btn btn-ghost btn-circle avatar placeholder"
+                        >
+                            <div className="bg-primary text-primary-content w-10 rounded-full flex items-center justify-center">
+                                <span className="text-lg">
+                                    {session?.user?.name?.charAt(0).toUpperCase()}
+                                </span>
+                            </div>
+                        </div>
+                        <ul
+                            tabIndex={-1}
+                            className="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow"
+                        >
+                            <li>
+                                <button onClick={() => signOut({ redirectTo: "/login" })}>
+                                    Logout
+                                </button>
+                            </li>
+                        </ul>
                     </div>
                 ) : (
                     <div className="flex gap-2">

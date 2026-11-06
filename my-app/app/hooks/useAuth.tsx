@@ -1,4 +1,5 @@
 "use client"
+import Cookies from "js-cookie"
 
 import { useRouter } from "next/navigation"
 
@@ -15,6 +16,7 @@ import {
     checkGoogleSession,
     handleGoogleSignout
 } from "../actions/GoogleAction"
+import { Login } from "../people/person"
 
 interface User {
     id: string | null | undefined
@@ -29,8 +31,25 @@ interface AuthState {
 }
 
 interface AuthContextType extends AuthState {
+    login: (credentials: LoginCredentials) => Promise<AuthResponse>
+    register: (credentials: RegisterCredentials) => Promise<AuthResponse>
     checkGoogle: () => void
     logout: () => Promise<void>
+}
+
+interface LoginCredentials {
+    email: string
+    password: string
+}
+
+interface RegisterCredentials extends LoginCredentials {
+    name: string
+}
+
+interface AuthResponse {
+    user: User
+    message?: string
+    error?: string
 }
 
 
@@ -77,22 +96,96 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, [])
 
 
+
+
+    const login = useCallback(
+        async (credentials: LoginCredentials): Promise<AuthResponse> => {
+            const response = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(credentials),
+                credentials: "include"
+            })
+
+            const data: AuthResponse = await response.json()
+
+            if (!response.ok) {
+                throw new Error(data.error || "Login failed ")
+            }
+
+
+            setAuthState({
+                user: data.user,
+                isAuthenticated: true,
+                isLoading: false
+            })
+            return data
+        },
+        []
+    )
+
+    const register = useCallback(
+        async (credentials: RegisterCredentials): Promise<AuthResponse> => {
+            const response = await fetch("/api/auth/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(credentials),
+                credentials: "include"
+            })
+
+            const data: AuthResponse = await response.json()
+
+            if (!response.ok) {
+                throw new Error(data.error || "Registration Failed ")
+            }
+
+            setAuthState({
+                user: data.user,
+                isAuthenticated: true,
+                isLoading: false
+            })
+            return data
+        },
+        []
+    )
+
     const logout = useCallback(async () => {
+        const googleSessionToken =
+            Cookies.get("authjs.session-token") ||
+            Cookies.get("_Secure-authjs.session-token")
+
+        const isGoogleUser = Boolean(googleSessionToken)
+
         setAuthState({
             user: user,
             isAuthenticated: false,
             isLoading: false
         })
-        await handleGoogleSignout()
-    }, [])
+        try {
+            await fetch("/api/auth/logout", {
+                method: "POST",
+                credentials: "include"
+            })
+        } catch {
 
+        }
+        if (isGoogleUser) {
+            try {
+                await handleGoogleSignout()
+            } catch (err) {
+                console.error("Google signout error:", err)
+            }
+        }
+        router.push("login")
+    }, [router])
 
     const value: AuthContextType = {
         ...authState,
+        login,
+        register,
         checkGoogle,
         logout
     }
-
     return <AuthContext.Provider value={value}>{children} </AuthContext.Provider>
 }
 

@@ -31,15 +31,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
 
-        <Suspense>
-          <Providers>
-            <PeopleProvider>
-              <Toaster position="bottom-right" />
-              < Navbar />
-              {children}
-            </PeopleProvider>
-          </Providers>
-        </Suspense>
+
+        <Providers>
+          <PeopleProvider>
+            <Toaster position="bottom-right" />
+            < Navbar />
+            {children}
+          </PeopleProvider>
+        </Providers>
+
 
       </body>
     </html>
